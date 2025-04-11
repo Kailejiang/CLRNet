@@ -7,7 +7,7 @@ from sklearn.cluster import DBSCAN
 import joblib
 import schnetpack.properties as properties
 
-class Eregression(nn.Module):
+class Clrnet(nn.Module):
     def __init__(
         self,
         n_atom_basis: int,
@@ -19,7 +19,7 @@ class Eregression(nn.Module):
         dbscan_min_samples: int = 10,
         aggregation_mode: str = "sum",  # "sum" or "avg"
         output_key: str = "energy_U0",
-        enable_smooth: bool = False,  # 是否启用势能面平滑拼接
+        enable_smooth: bool = False,  
         task_mode = "train", # "train" or "prediction"
 
     ):
@@ -56,7 +56,7 @@ class Eregression(nn.Module):
         )
 
         self.model_outputs = [self.output_key]
-        self.best_val_loss = float("inf")  # 初始化为正无穷大
+        self.best_val_loss = float("inf") 
 
         self.umap = UMAP(n_components=self.umap_components)
         self.dbscan = DBSCAN(eps=self.dbscan_eps, min_samples=self.dbscan_min_samples)
@@ -66,7 +66,7 @@ class Eregression(nn.Module):
         inputs = self.feature_model(inputs)
         scalar_representation = inputs["scalar_representation"]
         idx_m = inputs[properties.idx_m]
-        maxm = int(idx_m[-1]) + 1  # 获取分子数量
+        maxm = int(idx_m[-1]) + 1  
         molecular_features = torch.zeros(maxm, scalar_representation.size(-1), device=scalar_representation.device)
         molecular_features = torch.scatter_add(molecular_features, 0,
                                                idx_m.unsqueeze(-1).expand(-1, scalar_representation.size(-1)),
@@ -89,14 +89,12 @@ class Eregression(nn.Module):
             cluster_labels = torch.tensor(cluster_labels_np, device=molecular_features.device)
 
             if val_loss is not None and val_loss < self.best_val_loss:
-                self.best_val_loss = val_loss  # 更新当前最优验证损失
-            # 保存 UMAP 和 DBSCAN 模型
+                self.best_val_loss = val_loss  失
                 joblib.dump(self.umap, "umap_model.pkl")
                 joblib.dump(self.dbscan, "dbscan_model.pkl")
 
 
         elif self.mode == "predict":
-            # 加载预训练的 UMAP 和 DBSCAN 模型
             self.umap = joblib.load("umap_model.pkl")
             self.dbscan = joblib.load("dbscan_model.pkl")
 
@@ -112,7 +110,7 @@ class Eregression(nn.Module):
 
 
         if self.enable_smooth:
-            # 获取聚类中心
+
             cluster_centers = []
             for cluster_idx in range(cluster_labels.max().item() + 1):
                 cluster_mask = cluster_labels == cluster_idx
@@ -121,15 +119,13 @@ class Eregression(nn.Module):
                     cluster_centers.append(cluster_center)
             cluster_centers = torch.stack(cluster_centers)
 
-            # 计算每个点到各聚类中心的距离
+
             distances = torch.cdist(molecular_features, cluster_centers)
 
-            # 转换距离为权重（高斯核函数）
-            sigma = 1.0  # 标准差，用于控制平滑程度
+            sigma = 1.0  
             weights = torch.exp(-distances**2 / (2 * sigma**2))
-            weights = weights / weights.sum(dim=1, keepdim=True)  # 归一化权重
+            weights = weights / weights.sum(dim=1, keepdim=True)  
 
-            # 根据权重计算势能
             molecular_energies = torch.zeros(maxm, device=molecular_features.device)
             for cluster_idx, cluster_net in enumerate(self.cluster_nets):
                 cluster_energies = cluster_net(molecular_features).squeeze(-1)
@@ -138,13 +134,13 @@ class Eregression(nn.Module):
 
         else:
             molecular_energies = torch.zeros(maxm, device=molecular_features.device)
-            for cluster_idx in range(cluster_labels.max().item() + 1):  # 遍历每个有效聚类
+            for cluster_idx in range(cluster_labels.max().item() + 1): 
                 cluster_mask = cluster_labels == cluster_idx
                 # cluster_mask_last_20 = cluster_mask[-50:]
 
                 if cluster_mask.any():
                     cluster_features = molecular_features[cluster_mask]
-                    cluster_net = self.cluster_nets[cluster_idx]  # 使用对应的 MLP
+                    cluster_net = self.cluster_nets[cluster_idx]  
                     cluster_energies = cluster_net(cluster_features).squeeze(-1)
                     molecular_energies[cluster_mask] = cluster_energies
 
@@ -153,7 +149,7 @@ class Eregression(nn.Module):
             noise_energies = self.noise_net(molecular_features[noise_mask]).squeeze(-1)
             molecular_energies[noise_mask] = noise_energies
 
-        # 将分子能量存储到输入字典
+
         inputs[self.output_key] = molecular_energies
 
         return inputs
