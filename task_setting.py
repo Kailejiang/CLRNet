@@ -23,28 +23,22 @@ class Task(pl.LightningModule):
         self.optimizer_cls = optimizer_cls
         self.optimizer_args = optimizer_args
 
-        # 保存超参数
         self.save_hyperparameters(ignore=["model"])
 
     def forward(self, batch):
         return self.model(batch)
 
     def _compute_loss_and_metrics(self, batch, batch_idx, stage):
-        # 从 batch 中提取目标值
         targets = {self.name: batch[self.name]}
-        pred = self(batch)  # 前向传播，生成预测值
+        pred = self(batch) 
 
-        # 计算损失
         loss = self.loss_weight * self.loss_fn(pred[self.name], targets[self.name])
 
-        # 记录损失
         self.log(f"{stage}_loss", loss, on_step=(stage == "train"), on_epoch=(stage != "train"), prog_bar=True)
 
-        # 将验证损失传递给 Atomwise 模型以更新 best_val_loss
         if stage == "val":
             self.model.forward(batch, val_loss=loss.item())
 
-        # 计算并记录评估指标
         for name, metric in self.metrics.items():
             metric_value = metric(pred[self.name], targets[self.name])
             self.log(f"{stage}_{name}", metric_value, on_step=(stage == "train"), on_epoch=(stage != "train"), prog_bar=False)
