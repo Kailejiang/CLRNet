@@ -103,7 +103,7 @@ class Cfconv(nn.Module):
             # Continuous-filter convolution
             x_j = x_f[idx_j]
             x_ij = x_j * Wij
-            x_f = scatter_add(x_ij, idx_i, dim_size=x.shape[0])  # Use torch_scatter.scatter_add
+            x_f = scatter_add(x_ij, idx_i, dim_size=x.shape[0]) 
 
             # Update atomic embeddings
             x = x + f2out(x_f)
