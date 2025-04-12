@@ -1,12 +1,15 @@
 # CLRNet
-mainly for the following packages：
 
-ase = 3.22.1
+The following dependent  packages are required：
 
-schnetpack = 2.0.4
+ase = 3.22.1 (Single molecule model building)
 
-torch = 2.2.2
+schnetpack = 2.0.4 (Database construction)
 
-pytorch_lightning = 2.2.1
+torch = 2.2.2 (Machine learning method implementation)
 
-scikit-learn = 1.5.2
+pytorch_lightning = 2.2.1 (Machine learning architecture implementation)
+
+scikit-learn = 1.5.2 (Clustering method implementation)
+
+umap-learning = 0.5.7 (Dimensionality reduction method implementation)
