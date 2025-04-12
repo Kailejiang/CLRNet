@@ -20,7 +20,7 @@ class Cfconv(nn.Module):
         self,
         n_atom_basis: int,
         n_interactions: int,
-        n_rbf: int,
+        n_distance_feature: int,
         cutoff: float,
         n_filters: int = None,
         activation: Union[Callable, nn.Module] = shifted_softplus,
@@ -31,9 +31,9 @@ class Cfconv(nn.Module):
         self.n_atom_basis = n_atom_basis
         self.n_filters = n_filters or self.n_atom_basis
         self.cutoff = cutoff
-        self.n_rbf = n_rbf
+        self.n_distance_feature = n_distance_feature
 
-        offset = torch.linspace(start, cutoff, n_rbf)
+        offset = torch.linspace(start, cutoff, n_distance_feature)
         widths = torch.FloatTensor(
             torch.abs(offset[1] - offset[0]) * torch.ones_like(offset)
         )
@@ -50,7 +50,7 @@ class Cfconv(nn.Module):
             nn.ModuleDict({
                 "in2f": nn.Linear(n_atom_basis, self.n_filters, bias=False),  # Replace Dense
                 "filter_network": nn.Sequential(
-                    nn.Linear(n_rbf, self.n_filters),  # Replace Dense
+                    nn.Linear(n_distance_feature, self.n_filters),  # Replace Dense
                     activation(),
                     nn.Linear(self.n_filters, self.n_filters),  # Replace Dense
                 ),
