@@ -1,8 +1,12 @@
 # CLRNet
 mainly for the following packages：
 
-schnetpack
+ase = 3.22.1
 
-torch
+schnetpack = 2.0.4
 
-pytorch_lightning
+torch = 2.2.2
+
+pytorch_lightning = 2.2.1
+
+scikit-learn = 1.5.2
