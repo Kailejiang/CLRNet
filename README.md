@@ -1,5 +1,7 @@
 # CLRNet
 
+CLRNet is a network framework for hierarchically constructing potential energy surfaces, integrating machine learning methods including graph neural networks, clustering, and local regression.
+
 The following dependent  packages are required：
 
 ase = 3.22.1 (Single molecule model building)
