@@ -39,15 +39,15 @@ if __name__ == '__main__':
     n_atom_basis = 32
     n_rbf = 20
 
-    schnet = Cfconv(
+    fea_extr = Cfconv(
         n_atom_basis=n_atom_basis, n_interactions=3,
         n_rbf=n_rbf, cutoff=cutoff
     )
 
-    pred_U0 = Clrnet(n_atom_basis=n_atom_basis,feature_model=schnet,output_key="energy_U0")
+    ene_reg = Clrnet(n_atom_basis=n_atom_basis,feature_model=fea_extr,output_key="energy_U0")
 
     task = Task(
-        model=pred_U0,
+        model=ene_reg,
         optimizer_cls=torch.optim.AdamW,
         optimizer_args={"lr": 5e-5}
     )
