@@ -36,12 +36,12 @@ if __name__ == '__main__':
 
 
     cutoff = 5.
-    n_atom_basis = 32
-    n_rbf = 20
+    n_atom_feature = 32
+    n_distance_feature = 20
 
     fea_extr = Cfconv(
-        n_atom_basis=n_atom_basis, n_interactions=3,
-        n_rbf=n_rbf, cutoff=cutoff
+        n_atom_feature=n_atom_feature, n_interactions=3,
+        n_distance_feature=n_distance_feature, cutoff=cutoff
     )
 
     ene_reg = Clrnet(n_atom_basis=n_atom_basis,feature_model=fea_extr,output_key="energy_U0")
