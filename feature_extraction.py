@@ -18,7 +18,7 @@ def scatter_add(x, idx_i, dim_size, dim = 0):
 class Cfconv(nn.Module):
     def __init__(
         self,
-        n_atom_basis: int,
+        n_atom_feature: int,
         n_interactions: int,
         n_distance_feature: int,
         cutoff: float,
@@ -28,8 +28,8 @@ class Cfconv(nn.Module):
         start: float = 0.0,
     ):
         super().__init__()
-        self.n_atom_basis = n_atom_basis
-        self.n_filters = n_filters or self.n_atom_basis
+        self.n_atom_feature = n_atom_feature
+        self.n_filters = n_filters or self.n_atom_feature
         self.cutoff = cutoff
         self.n_distance_feature = n_distance_feature
 
@@ -48,16 +48,16 @@ class Cfconv(nn.Module):
         # Initialize interaction block layers
         self.interactions = nn.ModuleList([
             nn.ModuleDict({
-                "in2f": nn.Linear(n_atom_basis, self.n_filters, bias=False),  # Replace Dense
+                "in2f": nn.Linear(n_atom_feature, self.n_filters, bias=False),  # Replace Dense
                 "filter_network": nn.Sequential(
                     nn.Linear(n_distance_feature, self.n_filters),  # Replace Dense
                     activation(),
                     nn.Linear(self.n_filters, self.n_filters),  # Replace Dense
                 ),
                 "f2out": nn.Sequential(
-                    nn.Linear(self.n_filters, n_atom_basis),  # Replace Dense
+                    nn.Linear(self.n_filters, n_atom_feature),  # Replace Dense
                     activation(),
-                    nn.Linear(n_atom_basis, n_atom_basis)  # Replace Dense
+                    nn.Linear(n_atom_feature, n_atom_feature)  # Replace Dense
                 )
             })
             for _ in range(n_interactions)
