@@ -19,3 +19,11 @@ scikit-learn = 1.5.2 (Clustering method implementation)
 umap-learning = 0.5.7 (Dimensionality reduction method implementation)
 
 ## Usage
+
+Clrnet_main: This script sets up and trains a machine learning model with data preparation, model definition, and training configuration included.
+
+energy regression :
+
+feature_extraction :
+
+task_setting :
