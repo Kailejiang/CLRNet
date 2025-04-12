@@ -22,8 +22,8 @@ umap-learning = 0.5.7 (Dimensionality reduction method implementation)
 
 Clrnet_main: This script sets up and trains a machine learning model with data preparation, model definition, and training configuration included.
 
-energy regression :
+feature_extraction: This code defines a Cfconv neural network module for processing atomic data.
 
-feature_extraction :
+energy regression :
 
 task_setting :
