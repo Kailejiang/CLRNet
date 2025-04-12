@@ -2,7 +2,7 @@
 
 CLRNet is a network framework for hierarchically constructing potential energy surfaces, integrating machine learning methods including graph neural networks, clustering, and local regression.
 
-* Install environments
+## Install environments
 
 The following dependent  packages are required：
 
@@ -18,4 +18,4 @@ scikit-learn = 1.5.2 (Clustering method implementation)
 
 umap-learning = 0.5.7 (Dimensionality reduction method implementation)
 
-* Usage
+## Usage
