@@ -24,6 +24,6 @@ Clrnet_main: This script sets up and trains a machine learning model with data p
 
 feature_extraction: This code defines a Cfconv neural network module for processing atomic data.
 
-energy regression :
+energy regression : This code defines the Clrnet class for processesing molecular features to predict PES, and allows for both training and prediction modes with optional smoothing of cluster contributions.
 
 task_setting :
