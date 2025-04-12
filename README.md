@@ -27,3 +27,23 @@ feature_extraction: This code defines a Cfconv neural network module for process
 energy regression : This code defines the Clrnet class for processesing molecular features to predict PES, and allows for both training and prediction modes with optional smoothing of cluster contributions.
 
 task_setting : The Task class is a PyTorch Lightning module that manages the training, validation, and testing of a model for energy prediction, incorporating loss computation, metrics tracking, and optimizer configuration, while also handling model state saving and epoch-end cleanup.
+
+## Usage
+
+Default running:
+
+```
+python train.py
+```
+
+Specify configuration file:
+
+```
+python train.py --config custom_config.yaml
+```
+
+Override parameters:
+
+```
+python train.py --batch_size 32 --learning_rate 1e-4 --max_epochs 200
+```
