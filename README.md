@@ -39,7 +39,7 @@ python train.py
 Specify configuration file:
 
 ```
-python train.py --config custom_config.yaml
+python train.py --config config.yaml
 ```
 
 Override parameters:
