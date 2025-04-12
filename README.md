@@ -18,7 +18,7 @@ scikit-learn = 1.5.2 (Clustering method implementation)
 
 umap-learning = 0.5.7 (Dimensionality reduction method implementation)
 
-## Usage
+## Brief introduction
 
 Clrnet_main: This script sets up and trains a machine learning model with data preparation, model definition, and training configuration included.
 
@@ -26,4 +26,4 @@ feature_extraction: This code defines a Cfconv neural network module for process
 
 energy regression : This code defines the Clrnet class for processesing molecular features to predict PES, and allows for both training and prediction modes with optional smoothing of cluster contributions.
 
-task_setting :
+task_setting : The Task class is a PyTorch Lightning module that manages the training, validation, and testing of a model for energy prediction, incorporating loss computation, metrics tracking, and optimizer configuration, while also handling model state saving and epoch-end cleanup.
