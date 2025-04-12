@@ -1,0 +1,24 @@
+data:
+  datapath: './your_database_name.db'
+  batch_size: 20
+  distance_unit: 'Ang'
+  property_units:
+    energy_U0: 'eV'
+  num_train: 0.8
+  num_val: 0.1
+  num_test: 0.1
+  cutoff: 5.0
+  num_workers: 8
+  pin_memory: true
+
+model:
+  n_atom_feature: 32
+  n_distance_feature: 20
+  n_interactions: 3
+
+training:
+  optimizer: "AdamW"
+  learning_rate: 5e-5
+  max_epochs: 100
+  patience: 20
+  save_path: './model_save'
