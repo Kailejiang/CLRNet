@@ -1,6 +1,21 @@
 from ase.md import Langevin, MDLogger
 from ase.io.trajectory import Trajectory
 
+
+ethanol_ase = AseInterface(
+    molecule_path,
+    ase_dir,
+    model_file=model_path,
+    neighbor_list=trn.ASENeighborList(cutoff=5.0),
+    energy_key=MD17.energy,
+    force_key=MD17.forces,
+    energy_unit="kcal/mol",
+    position_unit="Ang",
+    device="cpu",
+    dtype=torch.float64,
+)
+
+
 # Load logged results
 results = np.loadtxt(os.path.join(ase_dir, 'simulation.log'), skiprows=1)
 
@@ -33,6 +48,131 @@ print('Average temperature: {:10.2f} K'.format(np.mean(temperature)))
 
 plt.show()
 
+
+
+class SpkCalculator(Calculator):
+    energy = "energy"
+    forces = "forces"
+    implemented_properties = [energy, forces]
+
+    def __init__(
+        self,
+        model_file: str,
+        neighbor_list: schnetpack.transform.Transform,
+        energy_key: str = "energy",
+        force_key: str = "forces",
+        energy_unit: Union[str, float] = "kcal/mol",
+        position_unit: Union[str, float] = "Angstrom",
+        device: Union[str, torch.device] = "cpu",
+        dtype: torch.dtype = torch.float32,
+        converter: callable = AtomsConverter,
+        transforms: Union[
+            schnetpack.transform.Transform, List[schnetpack.transform.Transform]
+        ] = None,
+        additional_inputs: Dict[str, torch.Tensor] = None,
+        **kwargs,
+    ):
+        """
+        Args:
+            model_file (str): path to trained model
+            neighbor_list (schnetpack.transform.Transform): SchNetPack neighbor list
+            energy_key (str): name of energies in model (default="energy")
+            force_key (str): name of forces in model (default="forces")
+            energy_unit (str, float): energy units used by model (default="kcal/mol")
+            position_unit (str, float): position units used by model (default="Angstrom")
+            device (torch.device): device used for calculations (default="cpu")
+            dtype (torch.dtype): select model precision (default=float32)
+            converter (callable): converter used to set up input batches
+            transforms (schnetpack.transform.Transform, list): transforms for the converter. More information
+                can be found in the AtomsConverter docstring.
+            additional_inputs (dict): additional inputs required for some transforms in the converter.
+            **kwargs: Additional arguments for basic ase calculator class
+        """
+        Calculator.__init__(self, **kwargs)
+
+        self.converter = converter(
+            neighbor_list=neighbor_list,
+            device=device,
+            dtype=dtype,
+            transforms=transforms,
+            additional_inputs=additional_inputs,
+        )
+
+        self.energy_key = energy_key
+        self.force_key = force_key
+
+        # Mapping between ASE names and model outputs
+        self.property_map = {
+            self.energy: energy_key,
+            self.forces: force_key,
+        }
+
+        self.model = self._load_model(model_file)
+        self.model.to(device=device, dtype=dtype)
+
+        # set up basic conversion factors
+        self.energy_conversion = convert_units(energy_unit, "eV")
+        self.position_conversion = convert_units(position_unit, "Angstrom")
+
+        # Unit conversion to default ASE units
+        self.property_units = {
+            self.energy: self.energy_conversion,
+            self.forces: self.energy_conversion / self.position_conversion,
+        }
+
+        # Container for basic ml model ouputs
+        self.model_results = None
+
+    def _load_model(self, model_file: str) -> schnetpack.model.AtomisticModel:
+
+        log.info("Loading model from {:s}".format(model_file))
+        # load model and keep it on CPU, device can be changed afterwards
+        model = load_model(model_file, device=torch.device("cpu")).to(torch.float64)
+        model = model.eval()
+
+        return model
+
+    def calculate(
+        self,
+        atoms: ase.Atoms = None,
+        properties: List[str] = ["energy"],
+        system_changes: List[str] = all_changes,
+    ):
+
+        if self.calculation_required(atoms, properties):
+            Calculator.calculate(self, atoms)
+
+            # Convert to schnetpack input format
+            model_inputs = self.converter(atoms)
+            model_results = self.model(model_inputs)
+
+            results = {}
+            for prop in properties:
+                model_prop = self.property_map[prop]
+
+                if model_prop in model_results:
+                    if prop == self.energy:
+                        # ase calculator should return scalar energy
+                        results[prop] = (
+                            model_results[model_prop].cpu().data.numpy().item()
+                            * self.property_units[prop]
+                        )
+                    else:
+                        results[prop] = (
+                            model_results[model_prop].cpu().data.numpy()
+                            * self.property_units[prop]
+                        )
+                else:
+                    raise AtomsConverterError(
+                        "'{:s}' is not a property of your model. Please "
+                        "check the model "
+                        "properties!".format(prop)
+                    )
+
+            self.results = results
+            self.model_results = model_results
+
+
 class AseInterface:
     """
     Interface for ASE calculations (optimization and molecular dynamics)
@@ -46,7 +186,6 @@ class AseInterface:
         neighbor_list: schnetpack.transform.Transform,
         energy_key: str = "energy",
         force_key: str = "forces",
-        stress_key: Optional[str] = None,
         energy_unit: Union[str, float] = "kcal/mol",
         position_unit: Union[str, float] = "Angstrom",
         device: Union[str, torch.device] = "cpu",
@@ -59,38 +198,13 @@ class AseInterface:
         ] = None,
         additional_inputs: Dict[str, torch.Tensor] = None,
     ):
-        """
-        Args:
-            molecule_path: Path to initial geometry
-            working_dir: Path to directory where files should be stored
-            model_file (str): path to trained model
-            neighbor_list (schnetpack.transform.Transform): SchNetPack neighbor list
-            energy_key (str): name of energies in model (default="energy")
-            force_key (str): name of forces in model (default="forces")
-            stress_key (str): name of stress tensor in model. Will not be computed if set to None (default=None)
-            energy_unit (str, float): energy units used by model (default="kcal/mol")
-            position_unit (str, float): position units used by model (default="Angstrom")
-            device (torch.device): device used for calculations (default="cpu")
-            dtype (torch.dtype): select model precision (default=float32)
-            converter (schnetpack.interfaces.AtomsConverter): converter used to set up input batches
-            optimizer_class (ase.optimize.optimizer): ASE optimizer used for structure relaxation.
-            fixed_atoms (list(int)): list of indices corresponding to atoms with positions fixed in space.
-            transforms (schnetpack.transform.Transform, list): transforms for the converter. More information
-                can be found in the AtomsConverter docstring.
-            additional_inputs (dict): additional inputs required for some transforms in the converter.
-        """
         # Setup directory
         self.working_dir = working_dir
         if not os.path.exists(self.working_dir):
             os.makedirs(self.working_dir)
 
         # Load the molecule
-        self.molecule = read(molecule_path)
-
-        # Apply position constraints
-        if fixed_atoms:
-            c = FixAtoms(fixed_atoms)
-            self.molecule.set_constraint(constraint=c)
+        self.molecule = read(molecule_path)、
 
         # Set up optimizer
         self.optimizer_class = optimizer_class
@@ -101,7 +215,6 @@ class AseInterface:
             neighbor_list=neighbor_list,
             energy_key=energy_key,
             force_key=force_key,
-            stress_key=stress_key,
             energy_unit=energy_unit,
             position_unit=position_unit,
             device=device,
