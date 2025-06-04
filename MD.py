@@ -15,6 +15,9 @@ from ase.md.velocitydistribution import (
 from ase.optimize import QuasiNewton
 from ase.vibrations import Vibrations
 
+
+import schnetpack.interfaces.ase_interface.AtomsConverter as AtomsConverter
+
 ethanol_ase = AseInterface(
     molecule_path,
     ase_dir,
