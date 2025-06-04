@@ -1,6 +1,38 @@
 from ase.md import Langevin, MDLogger
 from ase.io.trajectory import Trajectory
 
+# Load logged results
+results = np.loadtxt(os.path.join(ase_dir, 'simulation.log'), skiprows=1)
+
+# Determine time axis
+time = results[:,0]
+
+# Load energies
+energy_tot = results[:,1]
+energy_pot = results[:,2]
+energy_kin = results[:,3]
+
+# Construct figure
+plt.figure(figsize=(14,6))
+
+# Plot energies
+plt.subplot(2,1,1)
+plt.plot(time, energy_tot, label='Total energy')
+plt.plot(time, energy_pot, label='Potential energy')
+plt.ylabel('E [eV]')
+plt.legend()
+
+plt.subplot(2,1,2)
+plt.plot(time, energy_kin, label='Kinetic energy')
+plt.ylabel('E [eV]')
+plt.xlabel('Time [ps]')
+plt.legend()
+
+temperature = results[:,4]
+print('Average temperature: {:10.2f} K'.format(np.mean(temperature)))
+
+plt.show()
+
     def init_md(
         self,
         name: str,
