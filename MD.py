@@ -1,6 +1,19 @@
-from ase.md import Langevin, MDLogger
-from ase.io.trajectory import Trajectory
+import os
 
+import ase
+from ase import units
+from ase.constraints import FixAtoms
+from ase.calculators.calculator import Calculator, all_changes
+from ase.io import read, write
+from ase.io.trajectory import Trajectory
+from ase.md import VelocityVerlet, Langevin, MDLogger
+from ase.md.velocitydistribution import (
+    MaxwellBoltzmannDistribution,
+    Stationary,
+    ZeroRotation,
+)
+from ase.optimize import QuasiNewton
+from ase.vibrations import Vibrations
 
 ethanol_ase = AseInterface(
     molecule_path,
@@ -66,28 +79,8 @@ class SpkCalculator(Calculator):
         device: Union[str, torch.device] = "cpu",
         dtype: torch.dtype = torch.float32,
         converter: callable = AtomsConverter,
-        transforms: Union[
-            schnetpack.transform.Transform, List[schnetpack.transform.Transform]
-        ] = None,
-        additional_inputs: Dict[str, torch.Tensor] = None,
         **kwargs,
     ):
-        """
-        Args:
-            model_file (str): path to trained model
-            neighbor_list (schnetpack.transform.Transform): SchNetPack neighbor list
-            energy_key (str): name of energies in model (default="energy")
-            force_key (str): name of forces in model (default="forces")
-            energy_unit (str, float): energy units used by model (default="kcal/mol")
-            position_unit (str, float): position units used by model (default="Angstrom")
-            device (torch.device): device used for calculations (default="cpu")
-            dtype (torch.dtype): select model precision (default=float32)
-            converter (callable): converter used to set up input batches
-            transforms (schnetpack.transform.Transform, list): transforms for the converter. More information
-                can be found in the AtomsConverter docstring.
-            additional_inputs (dict): additional inputs required for some transforms in the converter.
-            **kwargs: Additional arguments for basic ase calculator class
-        """
         Calculator.__init__(self, **kwargs)
 
         self.converter = converter(
@@ -192,11 +185,6 @@ class AseInterface:
         dtype: torch.dtype = torch.float32,
         converter: AtomsConverter = AtomsConverter,
         optimizer_class: type = QuasiNewton,
-        fixed_atoms: Optional[List[int]] = None,
-        transforms: Union[
-            schnetpack.transform.Transform, List[schnetpack.transform.Transform]
-        ] = None,
-        additional_inputs: Dict[str, torch.Tensor] = None,
     ):
         # Setup directory
         self.working_dir = working_dir
@@ -220,8 +208,6 @@ class AseInterface:
             device=device,
             dtype=dtype,
             converter=converter,
-            transforms=transforms,
-            additional_inputs=additional_inputs,
         )
 
         self.molecule.set_calculator(calculator)
@@ -238,23 +224,6 @@ class AseInterface:
         reset: bool = False,
         interval: int = 1,
     ):
-        """
-        Initialize an ase molecular dynamics trajectory. The logfile needs to
-        be specifies, so that old trajectories are not overwritten. This
-        functionality can be used to subsequently carry out equilibration and
-        production.
-
-        Args:
-            name: Basic name of logfile and trajectory
-            time_step: Time step in fs (default=0.5)
-            temp_init: Initial temperature of the system in K (default is 300)
-            temp_bath: Carry out Langevin NVT dynamics at the specified
-                temperature. If set to None, NVE dynamics are performed
-                instead (default=None)
-            reset: Whether dynamics should be restarted with new initial
-                conditions (default=False)
-            interval: Data is stored every interval steps (default=1)
-        """
 
         # If a previous dynamics run has been performed, don't reinitialize
         # velocities unless explicitly requested via restart=True
@@ -296,14 +265,6 @@ class AseInterface:
         remove_translation: bool = True,
         remove_rotation: bool = True,
     ):
-        """
-        Initialize velocities for molecular dynamics
-
-        Args:
-            temp_init: Initial temperature in Kelvin (default 300)
-            remove_translation: Remove translation components of velocity (default True)
-            remove_rotation: Remove rotation components of velocity (default True)
-        """
         MaxwellBoltzmannDistribution(self.molecule, temp_init * units.kB)
         if remove_translation:
             Stationary(self.molecule)
