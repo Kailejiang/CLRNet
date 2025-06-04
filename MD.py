@@ -31,6 +31,10 @@ ethanol_ase = AseInterface(
     dtype=torch.float64,
 )
 
+ethanol_ase.init_md(
+    'simulation'
+)
+ethanol_ase.run_md(1000)
 
 # Load logged results
 results = np.loadtxt(os.path.join(ase_dir, 'simulation.log'), skiprows=1)
