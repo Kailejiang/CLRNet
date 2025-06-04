@@ -114,34 +114,7 @@ class AseInterface:
         self.molecule.set_calculator(calculator)
 
         self.dynamics = None
-
-    def save_molecule(self, name: str, file_format: str = "xyz", append: bool = False):
-        """
-        Save the current molecular geometry.
-
-        Args:
-            name: Name of save-file.
-            file_format: Format to store geometry (default xyz).
-            append: If set to true, geometry is added to end of file (default False).
-        """
-        molecule_path = os.path.join(
-            self.working_dir, "{:s}.{:s}".format(name, file_format)
-        )
-        write(molecule_path, self.molecule, format=file_format, append=append)
-
-    def calculate_single_point(self):
-        """
-        Perform a single point computation of the energies and forces and
-        store them to the working directory. The format used is the extended
-        xyz format. This functionality is mainly intended to be used for
-        interfaces.
-        """
-        energy = self.molecule.get_potential_energy()
-        forces = self.molecule.get_forces()
-        self.molecule.energy = energy
-        self.molecule.forces = forces
-
-        self.save_molecule("single_point", file_format="xyz")
+        
 
     def init_md(
         self,
