@@ -17,6 +17,7 @@ from ase.vibrations import Vibrations
 
 
 import schnetpack.interfaces.ase_interface.AtomsConverter as AtomsConverter
+from schnetpack.dataset import MD17
 
 ethanol_ase = AseInterface(
     molecule_path,
