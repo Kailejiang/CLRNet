@@ -20,12 +20,28 @@ import schnetpack.interfaces.ase_interface.AtomsConverter as AtomsConverter
 from schnetpack.dataset import MD17
 
 from ase import io
+from ase import Atoms
 
 # Generate a directory for the ASE computations
 ase_dir = os.path.join('./', 'ase_calcs')
 
 if not os.path.exists(ase_dir):
     os.mkdir(ase_dir)
+
+atoms = Atoms(
+    numbers=[8, 6, 6, 1, 1, 1, 1, 1, 1], 
+    positions=np.array([
+    [-1.62183823, -0.37955435, 0.73899666],
+    [-0.22854481, -0.90219292, -0.26304624],
+    [0.35901742, -0.05066551, 2.4086958],
+    [1.34764766, 2.2261533, -1.92360918],
+    [0.6994068, -0.13627476, 0.13906061],
+    [1.89226687, 0.78276571, 0.20772979],
+    [-0.61796511, -0.63340956, -0.09012016],
+    [-0.58292702, -0.14208913, 0.097645],
+    [-1.24706339, -0.76473293, -1.31535204]
+])
+)
 
 # Write a sample molecule
 molecule_path = os.path.join(ase_dir, 'ethanol.xyz')
