@@ -19,6 +19,18 @@ from ase.vibrations import Vibrations
 import schnetpack.interfaces.ase_interface.AtomsConverter as AtomsConverter
 from schnetpack.dataset import MD17
 
+from ase import io
+
+# Generate a directory for the ASE computations
+ase_dir = os.path.join(forcetut, 'ase_calcs')
+
+if not os.path.exists(ase_dir):
+    os.mkdir(ase_dir)
+
+# Write a sample molecule
+molecule_path = os.path.join(ase_dir, 'ethanol.xyz')
+io.write(molecule_path, atoms, format='xyz')
+
 ethanol_ase = AseInterface(
     molecule_path,
     ase_dir,
