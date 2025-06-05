@@ -22,7 +22,7 @@ from schnetpack.dataset import MD17
 from ase import io
 
 # Generate a directory for the ASE computations
-ase_dir = os.path.join(forcetut, 'ase_calcs')
+ase_dir = os.path.join('./', 'ase_calcs')
 
 if not os.path.exists(ase_dir):
     os.mkdir(ase_dir)
