@@ -267,6 +267,14 @@ class AseInterface:
         self.dynamics.attach(logger, interval=interval)
         self.dynamics.attach(trajectory.write, interval=interval)
 
+    def run_md(self, steps: int):
+        if not self.dynamics:
+            raise AttributeError(
+                "Dynamics need to be initialized using the" " 'setup_md' function"
+            )
+    
+        self.dynamics.run(steps)
+
     def _init_velocities(
         self,
         temp_init: float = 300,
